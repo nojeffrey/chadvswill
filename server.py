@@ -14,14 +14,19 @@ from starlette.staticfiles import StaticFiles
 
 classes = ['chad', 'will']
 path = Path(__file__).parent
+
 app = Starlette()
-app.debug = True
+app.debug = False
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_headers=['X-Requested-With', 'Content-Type'])
 app.mount('/static', StaticFiles(directory='static'))
 
 
 async def setup_learner():
-    learn = load_learner(path)
+    data = ImageDataBunch.single_from_classes(
+        path, classes, ds_tfms=get_transforms(), size=224).normalize(imagenet_stats)
+    learn = cnn_learner(data, models.resnet34)
+    learn.load('will_chad_stage-1')
+    #learn = load_learner(path)
     return learn
 
 loop = asyncio.get_event_loop()
